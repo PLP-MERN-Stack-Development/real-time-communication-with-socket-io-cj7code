@@ -68,6 +68,14 @@ const addMessageToRoom = (room, message) => {
   }
 };
 
+// Room list utility function
+const getRoomList = () => {
+  return Array.from(rooms.entries()).map(([name, usersSet]) => ({
+    name: name,
+    userCount: usersSet.size
+  }));
+};
+
 // Socket.io connection handler
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
@@ -92,6 +100,9 @@ io.on('connection', (socket) => {
     
     // Notify all clients about updated user list
     io.emit('user_list', getOnlineUsers());
+    
+    // Send room list to the new user
+    socket.emit('room_list', getRoomList());
     
     // Notify room about new user
     socket.to('general').emit('user_joined', {
@@ -159,43 +170,68 @@ io.on('connection', (socket) => {
   socket.on('typing_start', () => handleUserTyping(socket, true));
   socket.on('typing_stop', () => handleUserTyping(socket, false));
 
-  // Handle room operations
+  // Handle room operations - UPDATED FOR ROOM CREATION
   socket.on('join_room', (roomName) => {
     const user = getUserBySocketId(socket.id);
     if (!user) return;
 
+    // Sanitize room name
+    const sanitizedRoomName = roomName.trim().toLowerCase();
+    
+    // Validate room name
+    if (!sanitizedRoomName || sanitizedRoomName.length > 20) {
+      socket.emit('room_error', 'Invalid room name');
+      return;
+    }
+
     // Leave current room
-    if (user.currentRoom) {
+    if (user.currentRoom && user.currentRoom !== sanitizedRoomName) {
       socket.leave(user.currentRoom);
       rooms.get(user.currentRoom)?.delete(socket.id);
+      
+      // Notify old room about user leaving
+      socket.to(user.currentRoom).emit('user_left_room', {
+        username: user.username,
+        room: user.currentRoom,
+        message: `${user.username} left ${user.currentRoom}`,
+        timestamp: new Date().toISOString()
+      });
     }
 
-    // Join new room
-    if (!rooms.has(roomName)) {
-      rooms.set(roomName, new Set());
-      messages.set(roomName, []);
+    // Create room if it doesn't exist
+    if (!rooms.has(sanitizedRoomName)) {
+      rooms.set(sanitizedRoomName, new Set());
+      messages.set(sanitizedRoomName, []);
+      console.log(`🎯 New room created: ${sanitizedRoomName}`);
     }
     
-    rooms.get(roomName).add(socket.id);
-    socket.join(roomName);
-    user.currentRoom = roomName;
+    // Join new room
+    rooms.get(sanitizedRoomName).add(socket.id);
+    socket.join(sanitizedRoomName);
+    user.currentRoom = sanitizedRoomName;
 
     // Send room messages to user
-    const roomMessages = messages.get(roomName) || [];
+    const roomMessages = messages.get(sanitizedRoomName) || [];
     socket.emit('room_messages', roomMessages);
     
-    // Notify room about user joining
-    socket.to(roomName).emit('user_joined_room', {
+    // Notify new room about user joining
+    socket.to(sanitizedRoomName).emit('user_joined_room', {
       username: user.username,
-      room: roomName,
-      message: `${user.username} joined ${roomName}`,
+      room: sanitizedRoomName,
+      message: `${user.username} joined ${sanitizedRoomName}`,
       timestamp: new Date().toISOString()
     });
 
-    // Update user list for the room
-    io.to(roomName).emit('user_list', getOnlineUsers().filter(u => 
-      getUserBySocketId(u.id)?.currentRoom === roomName
-    ));
+    // Update room list for ALL clients
+    io.emit('room_list', getRoomList());
+
+    // Update user list for the current room only
+    const roomUsers = getOnlineUsers().filter(u => 
+      getUserBySocketId(u.id)?.currentRoom === sanitizedRoomName
+    );
+    io.to(sanitizedRoomName).emit('user_list', roomUsers);
+
+    console.log(`✅ ${user.username} joined room: ${sanitizedRoomName}`);
   });
 
   // Handle private messages
@@ -240,6 +276,9 @@ io.on('connection', (socket) => {
       // Update user list
       io.emit('user_list', getOnlineUsers());
       
+      // Update room list
+      io.emit('room_list', getRoomList());
+      
       console.log(`${user.username} disconnected: ${reason}`);
       
       // Remove user after a delay to allow reconnection
@@ -256,13 +295,9 @@ io.on('connection', (socket) => {
     console.log(`Reconnection attempt ${attemptNumber} for ${socket.id}`);
   });
 
-  // Get available rooms
+  // Get available rooms - UPDATED
   socket.on('get_rooms', () => {
-    const roomList = Array.from(rooms.keys()).map(roomName => ({
-      name: roomName,
-      userCount: rooms.get(roomName).size
-    }));
-    socket.emit('room_list', roomList);
+    socket.emit('room_list', getRoomList());
   });
 });
 
@@ -277,11 +312,7 @@ app.get('/api/users', (req, res) => {
 });
 
 app.get('/api/rooms', (req, res) => {
-  const roomList = Array.from(rooms.keys()).map(roomName => ({
-    name: roomName,
-    userCount: rooms.get(roomName).size
-  }));
-  res.json(roomList);
+  res.json(getRoomList());
 });
 
 // Root route

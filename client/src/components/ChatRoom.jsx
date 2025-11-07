@@ -1,4 +1,4 @@
-// ChatRoom.jsx - Professional styling with click-outside close
+// ChatRoom.jsx - Modern professional buttons
 import { useState, useEffect, useRef } from 'react';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -29,7 +29,6 @@ const ChatRoom = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
   
-  // Ref for click-outside detection
   const notificationsRef = useRef(null);
 
   useEffect(() => {
@@ -62,7 +61,7 @@ const ChatRoom = ({
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-500 to-purple-600">
-      {/* Header - Professional Styling */}
+      {/* Header - Modern Professional Buttons */}
       <header className="flex justify-between items-center px-6 py-4 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
@@ -88,47 +87,46 @@ const ChatRoom = ({
           </div>
         </div>
         
-        {/* Professional Button Group */}
-        <div className="flex gap-3">
-          {/* Notifications Button */}
+        {/* Modern Professional Button Group */}
+        <div className="flex gap-2">
+          {/* Notifications Button - Modern Style */}
           <button 
             className={`
               relative p-3 rounded-xl transition-all duration-200 group
-              ${showNotifications 
-                ? 'bg-blue-500 text-white shadow-lg transform scale-105' 
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
-              }
+              border border-gray-300 bg-white/80 backdrop-blur-sm
+              hover:border-gray-400 hover:bg-white hover:shadow-md
+              ${showNotifications ? 'border-blue-300 bg-blue-50' : ''}
             `}
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <div className="flex items-center gap-2">
-              <span className={`text-lg transition-transform ${showNotifications ? 'scale-110' : 'group-hover:scale-110'}`}>
+              <span className={`text-lg transition-transform ${
+                showNotifications ? 'scale-110 text-blue-600' : 'text-gray-600 group-hover:text-gray-800 group-hover:scale-110'
+              }`}>
                 🔔
               </span>
             </div>
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg border border-white">
                 {unreadCount}
               </span>
             )}
           </button>
 
-          {/* Sidebar Toggle Button */}
+          {/* Sidebar Toggle Button - Modern Style */}
           <button 
             className={`
-              relative p-3 rounded-xl transition-all duration-200 group flex items-center gap-2
-              ${showSidebar 
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105' 
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
-              }
+              relative p-3 rounded-xl transition-all duration-200 group
+              border border-gray-300 bg-white/80 backdrop-blur-sm
+              hover:border-gray-400 hover:bg-white hover:shadow-md
+              ${showSidebar ? 'border-blue-300 bg-blue-50' : ''}
             `}
             onClick={toggleSidebar}
           >
-            <span className={`text-lg transition-transform ${showSidebar ? 'scale-110' : 'group-hover:scale-110'}`}>
+            <span className={`text-lg transition-transform ${
+              showSidebar ? 'scale-110 text-blue-600' : 'text-gray-600 group-hover:text-gray-800 group-hover:scale-110'
+            }`}>
               👥
-            </span>
-            <span className="text-sm font-semibold hidden sm:block">
-              {showSidebar ? 'Hide' : 'Show'}
             </span>
           </button>
         </div>
@@ -196,7 +194,7 @@ const ChatRoom = ({
           />
         </main>
 
-        {/* Notifications Panel with Click-Outside */}
+        {/* Notifications Panel with Smooth Transition */}
         <div ref={notificationsRef}>
           <Notifications
             notifications={notifications}

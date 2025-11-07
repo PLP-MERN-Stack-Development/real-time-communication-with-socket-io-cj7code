@@ -1,4 +1,4 @@
-// Notifications.jsx - Professional styling
+// Notifications.jsx - Smooth professional transitions
 const Notifications = ({ notifications, isVisible, onClose }) => {
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString('en-US', {
@@ -27,26 +27,26 @@ const Notifications = ({ notifications, isVisible, onClose }) => {
   const getNotificationColor = (type) => {
     switch (type) {
       case 'new_message':
-        return 'border-blue-500 bg-blue-50';
+        return 'border-l-blue-500 bg-blue-50/50';
       case 'private_message':
-        return 'border-purple-500 bg-purple-50';
+        return 'border-l-purple-500 bg-purple-50/50';
       case 'user_joined':
-        return 'border-green-500 bg-green-50';
+        return 'border-l-green-500 bg-green-50/50';
       case 'user_left':
-        return 'border-orange-500 bg-orange-50';
+        return 'border-l-orange-500 bg-orange-50/50';
       default:
-        return 'border-gray-500 bg-gray-50';
+        return 'border-l-gray-500 bg-gray-50/50';
     }
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-2xl border-l border-gray-200 z-50 animate-slide-in-right">
+    <div className="fixed top-0 right-0 w-96 h-full bg-white shadow-2xl border-l border-gray-200 z-50 transform transition-transform duration-300 ease-out">
       {/* Professional Header */}
       <div className="flex justify-between items-center p-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
             <span className="text-lg">🔔</span>
           </div>
           <div>
@@ -56,17 +56,17 @@ const Notifications = ({ notifications, isVisible, onClose }) => {
         </div>
         <button 
           onClick={onClose}
-          className="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center transition-all duration-200 hover:scale-110"
+          className="w-10 h-10 rounded-xl hover:bg-white/20 flex items-center justify-center transition-all duration-200 hover:scale-110 backdrop-blur-sm"
         >
           <span className="text-xl font-bold">×</span>
         </button>
       </div>
       
-      {/* Notifications List */}
-      <div className="h-full overflow-y-auto bg-gray-50/50">
+      {/* Notifications List with Smooth Animations */}
+      <div className="h-full overflow-y-auto bg-gray-50/30 backdrop-blur-sm">
         {notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center h-64 text-gray-500 animate-fade-in">
+            <div className="w-16 h-16 bg-gray-200/50 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
               <span className="text-2xl">🔔</span>
             </div>
             <p className="text-lg font-semibold mb-2">No notifications</p>
@@ -74,17 +74,17 @@ const Notifications = ({ notifications, isVisible, onClose }) => {
           </div>
         ) : (
           <div className="p-4 space-y-3">
-            {notifications.map((notification) => (
+            {notifications.map((notification, index) => (
               <div
                 key={notification.id}
-                className={`flex gap-4 p-4 rounded-xl border-l-4 transition-all duration-200 hover:shadow-md hover:transform hover:scale-[1.02] ${
-                  notification.read 
-                    ? 'bg-white/70 opacity-60' 
-                    : 'bg-white shadow-sm'
-                } ${getNotificationColor(notification.type)}`}
+                className={`flex gap-4 p-4 rounded-xl border-l-4 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md animate-slide-down backdrop-blur-sm
+                  ${getNotificationColor(notification.type)}
+                  ${notification.read ? 'opacity-60' : 'opacity-100'}
+                `}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${
-                  notification.read ? 'bg-gray-200' : 'bg-white shadow-sm'
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all duration-200 ${
+                  notification.read ? 'bg-gray-200/50' : 'bg-white/80 shadow-sm'
                 }`}>
                   {getNotificationIcon(notification.type)}
                 </div>
@@ -100,7 +100,7 @@ const Notifications = ({ notifications, isVisible, onClose }) => {
                   </div>
                 </div>
                 {!notification.read && (
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
                 )}
               </div>
             ))}

@@ -1,22 +1,22 @@
-// useSocket.js - Enhanced custom hook for Socket.io functionality
+// useSocket.js
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
 // Socket.io connection URL
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const SOCKET_URL = 'http://localhost:5000';
 
-// Create socket instance with enhanced configuration
+// Create socket instance
 export const socket = io(SOCKET_URL, {
-  autoConnect: false,
+  autoConnect: true,
   reconnection: true,
-  reconnectionAttempts: 10,
+  reconnectionAttempts: 5,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
   timeout: 20000,
   transports: ['websocket', 'polling']
 });
 
-// Custom hook for using socket.io with enhanced features
+// Custom hook for using socket.io
 export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -72,12 +72,10 @@ export const useSocket = () => {
     if (isAuthenticated) {
       socket.emit('typing_start');
       
-      // Clear existing timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
       
-      // Set timeout to stop typing indicator
       typingTimeoutRef.current = setTimeout(() => {
         stopTyping();
       }, 3000);
@@ -99,7 +97,7 @@ export const useSocket = () => {
     if (isAuthenticated) {
       socket.emit('join_room', roomName);
       setCurrentRoom(roomName);
-      setMessages([]); // Clear messages when joining new room
+      setMessages([]);
       setUnreadCount(0);
     }
   }, [isAuthenticated]);
@@ -120,32 +118,6 @@ export const useSocket = () => {
     
     setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
     setUnreadCount(prev => prev + 1);
-    
-    // Play notification sound
-    playNotificationSound();
-    
-    // Browser notification
-    if (Notification.permission === 'granted') {
-      new Notification(notification.title || 'New Message', {
-        body: notification.message,
-        icon: '/favicon.ico'
-      });
-    }
-  }, []);
-
-  // Play notification sound
-  const playNotificationSound = useCallback(() => {
-    const audio = new Audio('/notification.mp3');
-    audio.play().catch(() => {
-      // Silent fail if audio can't play
-    });
-  }, []);
-
-  // Request browser notification permission
-  const requestNotificationPermission = useCallback(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
   }, []);
 
   // Mark notifications as read
@@ -165,20 +137,24 @@ export const useSocket = () => {
   useEffect(() => {
     // Connection events
     const onConnect = () => {
+      console.log('✅ Connected to server');
       setIsConnected(true);
-      console.log('Connected to server');
     };
 
     const onDisconnect = (reason) => {
+      console.log('❌ Disconnected from server:', reason);
       setIsConnected(false);
-      console.log('Disconnected from server:', reason);
+    };
+
+    const onConnected = (data) => {
+      console.log('✅ Server connection confirmed:', data);
     };
 
     // Message events
     const onReceiveMessage = (message) => {
+      console.log('📨 Received message:', message);
       setMessages(prev => [...prev, message]);
       
-      // Add notification if message is not from current user and not in current room
       if (message.senderId !== socket.id && message.room !== currentRoom) {
         addNotification({
           type: 'new_message',
@@ -190,9 +166,9 @@ export const useSocket = () => {
     };
 
     const onPrivateMessage = (message) => {
+      console.log('🔒 Received private message:', message);
       setMessages(prev => [...prev, message]);
       
-      // Add notification for private messages
       if (message.from !== currentUser?.username) {
         addNotification({
           type: 'private_message',
@@ -203,15 +179,18 @@ export const useSocket = () => {
     };
 
     const onRoomMessages = (roomMessages) => {
+      console.log('📂 Received room messages:', roomMessages.length);
       setMessages(roomMessages);
     };
 
     // User events
     const onUserList = (userList) => {
+      console.log('👥 User list updated:', userList.length);
       setUsers(userList);
     };
 
     const onUserJoined = (data) => {
+      console.log('👋 User joined:', data.username);
       addNotification({
         type: 'user_joined',
         title: 'User Joined',
@@ -220,6 +199,7 @@ export const useSocket = () => {
     };
 
     const onUserLeft = (data) => {
+      console.log('👋 User left:', data.username);
       addNotification({
         type: 'user_left',
         title: 'User Left',
@@ -228,6 +208,7 @@ export const useSocket = () => {
     };
 
     const onUserJoinedRoom = (data) => {
+      console.log('🚪 User joined room:', data.username, data.room);
       addNotification({
         type: 'user_joined_room',
         title: 'Room Update',
@@ -242,12 +223,14 @@ export const useSocket = () => {
 
     // Room events
     const onRoomList = (roomList) => {
+      console.log('🏠 Room list updated:', roomList.length);
       setRooms(roomList);
     };
 
     // Register event listeners
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+    socket.on('connected', onConnected);
     socket.on('receive_message', onReceiveMessage);
     socket.on('private_message', onPrivateMessage);
     socket.on('room_messages', onRoomMessages);
@@ -258,13 +241,11 @@ export const useSocket = () => {
     socket.on('typing_users', onTypingUsers);
     socket.on('room_list', onRoomList);
 
-    // Request notification permission on mount
-    requestNotificationPermission();
-
     // Clean up event listeners
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
+      socket.off('connected', onConnected);
       socket.off('receive_message', onReceiveMessage);
       socket.off('private_message', onPrivateMessage);
       socket.off('room_messages', onRoomMessages);
@@ -275,12 +256,11 @@ export const useSocket = () => {
       socket.off('typing_users', onTypingUsers);
       socket.off('room_list', onRoomList);
       
-      // Clear typing timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
     };
-  }, [addNotification, currentRoom, currentUser, requestNotificationPermission]);
+  }, [addNotification, currentRoom, currentUser]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -312,7 +292,6 @@ export const useSocket = () => {
     joinRoom,
     getRooms,
     markNotificationsAsRead,
-    requestNotificationPermission,
     scrollToBottom
   };
 };

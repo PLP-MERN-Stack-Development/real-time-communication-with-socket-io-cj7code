@@ -1,4 +1,4 @@
-// UserList.jsx - Professional private message layout
+// UserList.jsx -
 import { useState } from 'react';
 
 const UserList = ({ users, currentUser, onSendPrivateMessage }) => {
@@ -63,7 +63,7 @@ const UserList = ({ users, currentUser, onSendPrivateMessage }) => {
                 </div>
               </div>
 
-              {/* Private Message Input - PROFESSIONAL LAYOUT */}
+              {/* Private Message Input - LARGER Single-line Input */}
               {activeUser === user.username && (
                 <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200 animate-slide-down">
                   <div className="flex items-center gap-2 mb-3">
@@ -73,45 +73,61 @@ const UserList = ({ users, currentUser, onSendPrivateMessage }) => {
                     <span className="text-sm font-semibold text-gray-700">Private message to {user.username}</span>
                   </div>
                   
-                  {/* Input and Button - Proper Layout */}
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={privateMessage[user.username] || ''}
-                      onChange={(e) => setPrivateMessage(prev => ({
-                        ...prev,
-                        [user.username]: e.target.value
-                      }))}
-                      placeholder={`Type your private message to ${user.username}...`}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handlePrivateMessage(user.username);
-                        }
-                      }}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-800 bg-white placeholder-gray-500 shadow-sm"
-                      autoFocus
-                    />
-                    
-                    <div className="flex gap-2 justify-end">
+                  {/* ENLARGED Single-line Input with Icon Send Button */}
+                  <div className="flex gap-2 items-stretch">
+                    <div className="flex-1 min-w-0">
+                      <input
+                        type="text"
+                        value={privateMessage[user.username] || ''}
+                        onChange={(e) => setPrivateMessage(prev => ({
+                          ...prev,
+                          [user.username]: e.target.value
+                        }))}
+                        placeholder={`Type your private message to ${user.username}...`}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handlePrivateMessage(user.username);
+                          }
+                        }}
+                        className="w-full px-4 py-4 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-800 bg-white placeholder-gray-500 shadow-sm"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
                       <button
                         onClick={() => setActiveUser(null)}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all duration-200"
+                        className="p-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 flex items-center justify-center"
+                        title="Cancel"
                       >
-                        Cancel
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-gray-600">
+                          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
                       </button>
                       <button
                         onClick={() => handlePrivateMessage(user.username)}
                         disabled={!privateMessage[user.username]?.trim()}
-                        className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center gap-2"
+                        className="p-3 rounded-xl transition-all duration-200 border border-gray-300 bg-white/80 backdrop-blur-sm hover:border-gray-400 hover:bg-white hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group flex-1"
+                        title="Send private message"
                       >
-                        <span>Send</span>
-                        <span className="text-xs">🚀</span>
+                        <svg 
+                          width="20" 
+                          height="20" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          className={`transition-transform ${
+                            !privateMessage[user.username]?.trim()
+                              ? 'text-gray-400' 
+                              : 'text-gray-600 group-hover:text-blue-600 group-hover:scale-110'
+                          }`}
+                        >
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
+                        </svg>
                       </button>
                     </div>
                   </div>
                   
                   <p className="text-xs text-gray-500 mt-3 text-center border-t border-blue-100 pt-2">
-                    🔒 Only you and {user.username} will see this message
+                    🔒 Private conversation • Press Enter to send
                   </p>
                 </div>
               )}
